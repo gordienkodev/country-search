@@ -2,8 +2,13 @@ export function debounce(
   fn: (...args: unknown[]) => void,
   delay: number,
 ): (...args: unknown[]) => void {
-  void delay;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
   return (...args: unknown[]) => {
-    fn(...args);
+    clearTimeout(timer);
+
+    timer = setTimeout(() => {
+      fn(...args);
+    }, delay);
   };
 }
