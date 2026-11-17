@@ -1,3 +1,5 @@
+import { HttpError } from './HttpError';
+
 const COUNTRIES_API_URL = 'https://countries.dev/name';
 const REQUEST_TIMEOUT_MS = 5000;
 
@@ -13,7 +15,7 @@ export async function searchCountries(query: string, signal: AbortSignal): Promi
   }
 
   if (!response.ok) {
-    throw new Error(`HTTP error: ${response.status}`);
+    throw new HttpError(response.status);
   }
 
   return response.json();
