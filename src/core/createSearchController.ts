@@ -36,7 +36,15 @@ export function createSearchController(
   return {
     setQuery(query: string): void {
       activeController?.abort();
+      activeController = undefined;
       latestQuery = query;
+
+      if (query.trim() === '') {
+        debouncedSearch.cancel();
+        onStateChange({ status: 'empty', countries: [] });
+        return;
+      }
+
       debouncedSearch();
     },
   };
