@@ -47,7 +47,6 @@ function getErrorState(error: unknown): SearchResultState | null {
   };
 }
 
-/** Returns null on cancellation: the caller must not update the current UI state. */
 export async function loadSearchState(
   query: string,
   signal: AbortSignal,

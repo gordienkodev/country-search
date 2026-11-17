@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { loadSearchState } from '../src/core/loadSearchState';
 
-// Requests use the real searchCountries wrapper with a mocked network.
 describe('loadSearchState', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
