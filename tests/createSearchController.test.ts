@@ -105,4 +105,41 @@ describe('createSearchController', () => {
     expect(loadSearchStateMock).toHaveBeenCalledTimes(1);
     expect(onStateChange.mock.calls).toEqual([[{ status: 'loading' }]]);
   });
+
+  it('should abort the active request immediately when input changes before the next debounce', async () => {
+    loadSearchStateMock.mockImplementationOnce(
+      (_query, signal) =>
+        new Promise((resolve) => {
+          signal.addEventListener('abort', () => resolve(null), { once: true });
+        }),
+    );
+    const onStateChange = vi.fn();
+    const controller = createSearchController(onStateChange, 300);
+
+    controller.setQuery('Germany');
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(loadSearchStateMock).toHaveBeenCalledTimes(1);
+    const activeSignal = loadSearchStateMock.mock.calls[0]![1];
+    expect(activeSignal.aborted).toBe(false);
+
+    controller.setQuery('France');
+
+    expect(activeSignal.aborted).toBe(true);
+    expect(activeSignal.reason.name).toBe('AbortError');
+    expect(loadSearchStateMock).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(299);
+
+    expect(loadSearchStateMock).toHaveBeenCalledTimes(1);
+    expect(onStateChange.mock.calls).toEqual([[{ status: 'loading' }]]);
+
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(loadSearchStateMock).toHaveBeenCalledTimes(2);
+    expect(loadSearchStateMock).toHaveBeenLastCalledWith('France', expect.any(AbortSignal));
+    const nextSignal = loadSearchStateMock.mock.calls[1]![1];
+    expect(nextSignal).not.toBe(activeSignal);
+    expect(nextSignal.aborted).toBe(false);
+  });
 });
