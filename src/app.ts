@@ -1,6 +1,5 @@
 import { createSearchController } from './core/createSearchController.js';
-import type { SearchState } from './core/createSearchController.js';
-import type { Country } from './core/mapCountryResponse.js';
+import type { Country, SearchState } from './types';
 
 function element<K extends keyof HTMLElementTagNameMap>(
   tag: K,

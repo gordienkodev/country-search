@@ -1,16 +1,7 @@
 import { HttpError } from './HttpError.js';
 import { mapCountryResponse } from './mapCountryResponse.js';
-import type { Country } from './mapCountryResponse.js';
+import type { SearchResultState } from '../types';
 import { searchCountries } from './searchCountries.js';
-
-export type SearchError =
-  | { kind: 'timeout' | 'network' | 'unknown'; message: string }
-  | { kind: 'http'; status: number; message: string };
-
-export type SearchResultState =
-  | { status: 'empty'; countries: [] }
-  | { status: 'success'; countries: Country[] }
-  | { status: 'error'; error: SearchError };
 
 function getErrorState(error: unknown): SearchResultState | null {
   if (error instanceof Error && error.name === 'AbortError') {

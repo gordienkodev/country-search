@@ -1,7 +1,4 @@
-export interface DebouncedFunction {
-  (...args: unknown[]): void;
-  cancel(): void;
-}
+import type { DebouncedFunction } from '../types';
 
 export function debounce(fn: (...args: unknown[]) => void, delay: number): DebouncedFunction {
   let timer: ReturnType<typeof setTimeout> | undefined;

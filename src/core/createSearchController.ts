@@ -1,13 +1,6 @@
 import { debounce } from './debounce.js';
 import { loadSearchState } from './loadSearchState.js';
-import type { SearchResultState } from './loadSearchState.js';
-
-export type SearchState = { status: 'loading' } | SearchResultState;
-
-export interface SearchController {
-  setQuery(query: string): void;
-  retry(): Promise<void>;
-}
+import type { SearchController, SearchState } from '../types';
 
 export function createSearchController(
   onStateChange: (state: SearchState) => void,

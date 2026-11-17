@@ -1,14 +1,4 @@
-export interface Country {
-  name: string;
-  flag: string;
-  capital: string;
-  region: string;
-  population: number;
-  languages: string[];
-  area?: number;
-  borders?: string[];
-  currencies?: string[];
-}
+import type { Country, CountryLanguageResponse, CountryCurrencyResponse } from '../types';
 
 export function mapCountryResponse(raw: unknown): Country {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
@@ -22,7 +12,7 @@ export function mapCountryResponse(raw: unknown): Country {
   const languages = Array.isArray(data.languages)
     ? data.languages
         .filter(
-          (language): language is { name: string } =>
+          (language): language is CountryLanguageResponse =>
             typeof language === 'object' && language !== null && typeof language.name === 'string',
         )
         .map((language) => language.name)
@@ -48,7 +38,7 @@ export function mapCountryResponse(raw: unknown): Country {
   if (Array.isArray(data.currencies)) {
     country.currencies = data.currencies
       .filter(
-        (currency): currency is { name: string; code?: string; symbol?: string } =>
+        (currency): currency is CountryCurrencyResponse =>
           typeof currency === 'object' && currency !== null && typeof currency.name === 'string',
       )
       .map((currency) => {

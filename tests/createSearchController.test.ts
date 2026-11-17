@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createSearchController } from '../src/core/createSearchController';
 import { loadSearchState } from '../src/core/loadSearchState';
-import type { SearchResultState } from '../src/core/loadSearchState';
+import type { SearchResultState } from '../src/types';
 
 vi.mock('../src/core/loadSearchState', () => ({
   loadSearchState: vi.fn(),
