@@ -142,4 +142,80 @@ describe('createSearchController', () => {
     expect(nextSignal).not.toBe(activeSignal);
     expect(nextSignal.aborted).toBe(false);
   });
+
+  it.each(['', '   '])('should not request countries for blank input %j', async (query) => {
+    const controller = createSearchController(vi.fn(), 300);
+
+    controller.setQuery(query);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(loadSearchStateMock).not.toHaveBeenCalled();
+  });
+
+  it('should clear displayed results immediately when input becomes empty', async () => {
+    const result: SearchResultState = {
+      status: 'success',
+      countries: [
+        {
+          name: 'Germany',
+          flag: '',
+          capital: 'Berlin',
+          region: 'Europe',
+          population: 100,
+          languages: [],
+        },
+      ],
+    };
+    loadSearchStateMock.mockResolvedValueOnce(result);
+    const onStateChange = vi.fn();
+    const controller = createSearchController(onStateChange, 300);
+
+    controller.setQuery('Germany');
+    await vi.advanceTimersByTimeAsync(300);
+    expect(onStateChange).toHaveBeenLastCalledWith(result);
+    onStateChange.mockClear();
+
+    controller.setQuery('');
+
+    expect(onStateChange).toHaveBeenCalledExactlyOnceWith({ status: 'empty', countries: [] });
+  });
+
+  it('should cancel a pending debounce when input is cleared', async () => {
+    const onStateChange = vi.fn();
+    const controller = createSearchController(onStateChange, 300);
+
+    controller.setQuery('Germany');
+    await vi.advanceTimersByTimeAsync(100);
+    controller.setQuery('');
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(loadSearchStateMock).not.toHaveBeenCalled();
+    expect(onStateChange.mock.calls).toEqual([[{ status: 'empty', countries: [] }]]);
+  });
+
+  it('should abort an active request and keep results empty without a new request after clearing input', async () => {
+    loadSearchStateMock.mockImplementationOnce(
+      (_query, signal) =>
+        new Promise((resolve) => {
+          signal.addEventListener('abort', () => resolve(null), { once: true });
+        }),
+    );
+    const onStateChange = vi.fn();
+    const controller = createSearchController(onStateChange, 300);
+
+    controller.setQuery('Germany');
+    await vi.advanceTimersByTimeAsync(300);
+    const activeSignal = loadSearchStateMock.mock.calls[0]![1];
+    expect(activeSignal.aborted).toBe(false);
+    onStateChange.mockClear();
+
+    controller.setQuery('');
+
+    expect(activeSignal.aborted).toBe(true);
+    expect(activeSignal.reason.name).toBe('AbortError');
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(loadSearchStateMock).toHaveBeenCalledTimes(1);
+    expect(onStateChange.mock.calls).toEqual([[{ status: 'empty', countries: [] }]]);
+  });
 });
