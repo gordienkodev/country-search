@@ -6,6 +6,7 @@ export type SearchState = { status: 'loading' } | SearchResultState;
 
 export interface SearchController {
   setQuery(query: string): void;
+  retry(): Promise<void>;
 }
 
 export function createSearchController(
@@ -15,7 +16,7 @@ export function createSearchController(
   let latestQuery = '';
   let activeController: AbortController | undefined;
 
-  const debouncedSearch = debounce(async () => {
+  const runSearch = async (): Promise<void> => {
     const query = latestQuery;
     const controller = new AbortController();
     activeController = controller;
@@ -31,7 +32,9 @@ export function createSearchController(
     if (state !== null && !controller.signal.aborted) {
       onStateChange(state);
     }
-  }, delay);
+  };
+
+  const debouncedSearch = debounce(runSearch, delay);
 
   return {
     setQuery(query: string): void {
@@ -46,6 +49,17 @@ export function createSearchController(
       }
 
       debouncedSearch();
+    },
+    async retry(): Promise<void> {
+      debouncedSearch.cancel();
+      activeController?.abort();
+      activeController = undefined;
+
+      if (latestQuery.trim() === '') {
+        return;
+      }
+
+      await runSearch();
     },
   };
 }
