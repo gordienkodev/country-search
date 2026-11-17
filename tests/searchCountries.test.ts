@@ -39,7 +39,7 @@ describe('searchCountries', () => {
     });
   });
 
-  it('should pass signal to fetch', async () => {
+  it('should pass combined signal to fetch', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => [],
@@ -51,12 +51,17 @@ describe('searchCountries', () => {
 
     await searchCountries('Ger', controller.signal);
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        signal: controller.signal,
-      }),
-    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const [, options] = fetchMock.mock.calls[0];
+
+    expect(options.signal).toBeInstanceOf(AbortSignal);
+    expect(options.signal.aborted).toBe(false);
+
+    controller.abort();
+
+    expect(options.signal.aborted).toBe(true);
+    expect(options.signal.reason.name).toBe('AbortError');
   });
 
   it('should throw on network error', async () => {
