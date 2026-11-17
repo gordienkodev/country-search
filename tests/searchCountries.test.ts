@@ -81,4 +81,22 @@ describe('searchCountries', () => {
 
     await expect(searchCountries('Lol', controller.signal)).rejects.toThrow('HTTP error: 500');
   });
+
+  it('should throw TimeoutError when request times out', async () => {
+    const fetchMock = vi.fn((_url: string, options: RequestInit) => {
+      return new Promise((_resolve, reject) => {
+        options.signal?.addEventListener('abort', () => {
+          reject(options.signal?.reason);
+        });
+      });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const controller = new AbortController();
+
+    await expect(searchCountries('Ger', controller.signal)).rejects.toMatchObject({
+      name: 'TimeoutError',
+    });
+  }, 10000);
 });
