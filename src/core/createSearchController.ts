@@ -13,22 +13,29 @@ export function createSearchController(
   delay: number = 300,
 ): SearchController {
   let latestQuery = '';
+  let activeController: AbortController | undefined;
 
   const debouncedSearch = debounce(async () => {
     const query = latestQuery;
     const controller = new AbortController();
+    activeController = controller;
 
     onStateChange({ status: 'loading' });
 
     const state = await loadSearchState(query, controller.signal);
 
-    if (state !== null) {
+    if (activeController === controller) {
+      activeController = undefined;
+    }
+
+    if (state !== null && !controller.signal.aborted) {
       onStateChange(state);
     }
   }, delay);
 
   return {
     setQuery(query: string): void {
+      activeController?.abort();
       latestQuery = query;
       debouncedSearch();
     },
