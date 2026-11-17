@@ -5,6 +5,9 @@ export interface Country {
   region: string;
   population: number;
   languages: string[];
+  area?: number;
+  borders?: string[];
+  currencies?: string[];
 }
 
 export function mapCountryResponse(raw: unknown): Country {
@@ -25,7 +28,7 @@ export function mapCountryResponse(raw: unknown): Country {
         .map((language) => language.name)
     : [];
 
-  return {
+  const country: Country = {
     name: typeof data.name === 'string' ? data.name : '',
     flag: typeof flags?.png === 'string' ? flags.png : '',
     capital: typeof data.capital === 'string' ? data.capital : '',
@@ -33,4 +36,27 @@ export function mapCountryResponse(raw: unknown): Country {
     population: typeof data.population === 'number' ? data.population : 0,
     languages,
   };
+
+  if (typeof data.area === 'number') {
+    country.area = data.area;
+  }
+
+  if (Array.isArray(data.borders)) {
+    country.borders = data.borders.filter((border): border is string => typeof border === 'string');
+  }
+
+  if (Array.isArray(data.currencies)) {
+    country.currencies = data.currencies
+      .filter(
+        (currency): currency is { name: string; code?: string; symbol?: string } =>
+          typeof currency === 'object' && currency !== null && typeof currency.name === 'string',
+      )
+      .map((currency) => {
+        const code = typeof currency.code === 'string' ? ` (${currency.code})` : '';
+        const symbol = typeof currency.symbol === 'string' ? ` ${currency.symbol}` : '';
+        return `${currency.name}${code}${symbol}`;
+      });
+  }
+
+  return country;
 }
